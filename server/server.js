@@ -13,7 +13,10 @@ const app = express();
 
 app.use(
   cors({
-    origin: "https://studentms-frontend-opal.vercel.app",
+    origin: [
+      "http://localhost:5173",
+      "https://studentms-frontend-opal.vercel.app",
+    ],
   }),
 );
 app.use(express.json());
@@ -26,10 +29,12 @@ app.get("/", (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+}
 
 export default app;
