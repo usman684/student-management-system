@@ -11,9 +11,11 @@ connectDB();
 
 const app = express();
 
-app.use(cors(
-    origin: "https://studentms-frontend-opal.vercel.app"
-));
+app.use(
+  cors({
+    origin: "https://studentms-frontend-opal.vercel.app",
+  }),
+);
 app.use(express.json());
 app.use("/api/students", studentRoutes);
 
