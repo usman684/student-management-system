@@ -9,8 +9,15 @@ const Footer = () => {
         <p className="mb-3">Built with React, Bootstrap & Express</p>
 
         <div className="d-flex justify-content-center gap-3 mb-3">
-          <FaGithub size={22} />
-          <FaLinkedin size={22} />
+          <a href="https://github.com/usman684" target="_blank">
+            <FaGithub size={22} />
+          </a>
+          <a
+            href="https://www.linkedin.com/in/muhammad-usman-2041b3396"
+            target="_blank"
+          >
+            <FaLinkedin size={22} />
+          </a>
         </div>
 
         <small>© {new Date().getFullYear()} All Rights Reserved.</small>

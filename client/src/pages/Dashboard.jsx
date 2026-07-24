@@ -1,34 +1,101 @@
 import { FaUserGraduate, FaBookOpen, FaBuilding } from "react-icons/fa";
-
-import StatsCard from "../components/StatsCard.jsx";
-import StudentForm from "../components/StudentForm.jsx";
-import SearchBar from "../components/SearchBar.jsx";
-import StudentTable from "../components/StudentTable.jsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-const Dashboard = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [editingStudent, setEditingStudent] = useState(null);
-  const [students, setStudents] = useState([
-    {
-      id: 1,
-      name: "Ali Khan",
-      email: "ali@gmail.com",
-      phone: "03001234567",
-      course: "MERN Stack",
-      department: "Computer Science",
-    },
-    {
-      id: 2,
-      name: "Ahmed Raza",
-      email: "ahmed@gmail.com",
-      phone: "03111234567",
-      course: "Flutter",
-      department: "Software Engineering",
-    },
-  ]);
+import StatsCard from "../components/StatsCard";
+import StudentForm from "../components/StudentForm";
+import SearchBar from "../components/SearchBar";
+import StudentTable from "../components/StudentTable";
 
+import {
+  getStudents,
+  addStudent as createStudent,
+  updateStudent as editStudent,
+  deleteStudent as removeStudent,
+} from "../api/studentApi";
+
+const Dashboard = () => {
+  const [students, setStudents] = useState([]);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // =============================
+  // Fetch Students
+  // =============================
+  const fetchStudents = async () => {
+    try {
+      const response = await getStudents();
+      setStudents(response.data.data);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch students");
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  // =============================
+  // Add Student
+  // =============================
+  const addStudent = async (student) => {
+    try {
+      await createStudent(student);
+
+      toast.success("Student added successfully 🎉");
+
+      fetchStudents();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to add student");
+    }
+  };
+
+  // =============================
+  // Update Student
+  // =============================
+  const updateStudent = async (updatedStudent) => {
+    try {
+      await editStudent(updatedStudent._id, updatedStudent);
+
+      toast.success("Student updated successfully ✏️");
+
+      setEditingStudent(null);
+
+      fetchStudents();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update student");
+    }
+  };
+
+  // =============================
+  // Delete Student
+  // =============================
+  const deleteStudent = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this student?",
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await removeStudent(id);
+
+      toast.success("Student deleted successfully 🗑️");
+
+      if (editingStudent && editingStudent._id === id) {
+        setEditingStudent(null);
+      }
+
+      fetchStudents();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete student");
+    }
+  };
+
+  // =============================
+  // Search Filter
+  // =============================
   const filteredStudents = students.filter(
     (student) =>
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -37,46 +104,17 @@ const Dashboard = () => {
       student.department.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const addStudent = (student) => {
-    setStudents([
-      ...students,
-      {
-        id: Date.now(),
-        ...student,
-      },
-    ]);
+  // Dynamic Stats
+  const totalCourses = [...new Set(students.map((s) => s.course))].length;
 
-    toast.success("Student added successfully 🎉");
-  };
-
-  const updateStudent = (updatedStudent) => {
-    setStudents(
-      students.map((student) =>
-        student.id === updatedStudent.id ? updatedStudent : student,
-      ),
-    );
-
-    setEditingStudent(null);
-
-    toast.info("Student updated successfully ✏️");
-  };
-
-  const deleteStudent = (id) => {
-    setStudents(students.filter((student) => student.id !== id));
-
-    if (editingStudent && editingStudent.id === id) {
-      setEditingStudent(null);
-    }
-
-    toast.error("Student deleted successfully 🗑️");
-  };
+  const totalDepartments = [...new Set(students.map((s) => s.department))]
+    .length;
 
   return (
     <div className="container py-4">
       {/* Heading */}
       <div className="mb-4">
         <h2 className="fw-bold">Welcome Back 👋</h2>
-
         <p className="text-muted">Student Management Dashboard</p>
       </div>
 
@@ -85,7 +123,7 @@ const Dashboard = () => {
         <div className="col-md-4">
           <StatsCard
             title="Total Students"
-            value="120"
+            value={students.length}
             icon={<FaUserGraduate />}
             bgColor="#0d6efd"
           />
@@ -94,7 +132,7 @@ const Dashboard = () => {
         <div className="col-md-4">
           <StatsCard
             title="Courses"
-            value="8"
+            value={totalCourses}
             icon={<FaBookOpen />}
             bgColor="#198754"
           />
@@ -103,14 +141,14 @@ const Dashboard = () => {
         <div className="col-md-4">
           <StatsCard
             title="Departments"
-            value="5"
+            value={totalDepartments}
             icon={<FaBuilding />}
             bgColor="#fd7e14"
           />
         </div>
       </div>
 
-      {/* Form */}
+      {/* Student Form */}
       <div className="accordion mt-5" id="studentAccordion">
         <div className="accordion-item shadow-sm">
           <h2 className="accordion-header">
@@ -146,7 +184,7 @@ const Dashboard = () => {
         <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       </div>
 
-      {/* Table */}
+      {/* Student Table */}
       <StudentTable
         students={filteredStudents}
         setEditingStudent={setEditingStudent}
